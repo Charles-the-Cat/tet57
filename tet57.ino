@@ -35,8 +35,8 @@
 #define buf2x( k ) ((k)%(TET_WIDTH))
 #define buf2y( k ) ((k)/(TET_WIDTH))
 
-static unsigned byte dbuf[TET_WIDTH*TET_HEIGHT] = { OFF };
-static unsigned byte  buf[TET_WIDTH*TET_HEIGHT] = 
+static uint8_t dbuf[TET_WIDTH*TET_HEIGHT] = { OFF };
+static uint8_t  buf[TET_WIDTH*TET_HEIGHT] = 
 {
 	ON,0,0,0,0,0,ON,
 	ON,0,0,0,0,0,ON,
@@ -52,7 +52,7 @@ static unsigned byte  buf[TET_WIDTH*TET_HEIGHT] =
 void newShape()
 {
 	// first, clear dbuf
-	memset( dbuf, OFF, TET_WIDTH*TET_HEIGHT*sizeof(byte) );
+	memset( dbuf, OFF, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
 	switch( random(4) )
 	{
 		default:
@@ -74,7 +74,7 @@ void newShape()
 bool isGameOver()
 {
 	// check if the top row, excluding the first and last, has any ON
-	for ( unsigned byte i = 1; i < TET_WIDTH - 1; i++ )
+	for ( uint8_t i = 1; i < TET_WIDTH - 1; i++ )
 		if ( i = ON ) return true;
 	return false;
 }
@@ -89,7 +89,7 @@ void setup() {matrix.begin(0x70);}
 void loop()
 {
 	matrix.clear();
-	for ( unsigned byte i = 0; i < TET_WIDTH * TET_HEIGHT; i++ )
+	for ( uint8_t i = 0; i < TET_WIDTH * TET_HEIGHT; i++ )
 	{
 		if ( buf[i] || dbuf[i] )
 		{
