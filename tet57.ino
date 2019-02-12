@@ -21,8 +21,8 @@
    [][]
 */
 
-#define OFF 0
-#define ON ~0
+#define OFF 0x00
+#define ON 0xFF
 
 // buffer width and height
 #define TET_WIDTH 7
