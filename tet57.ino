@@ -24,6 +24,9 @@
 #define OFF 0x00
 #define ON 0xFF
 
+// constant frame delay, in milliseconds
+#define TET_DELAY_CONST 200
+
 // buffer width and height
 #define TET_WIDTH 7
 #define TET_HEIGHT 9
@@ -84,7 +87,7 @@ void dbufFreeze()
 
 void dbufAdvance()
 {
-	for ( uint8_t i = TET_WIDTH*(TET_HEIGHT-1)-1; i >= 0; i-- )
+	for ( int8_t i = TET_WIDTH*(TET_HEIGHT-1)-1; i >= 0; i-- )
 	{
 		if ( dbuf[i] )
 		{
@@ -108,7 +111,12 @@ void dbufAdvance()
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
-void setup() {matrix.begin(0x70);}
+void setup()
+{
+	matrix.begin(0x70);
+	randomSeed(analogRead(0));
+	newShape();
+}
 void loop()
 {
 	matrix.clear();
@@ -120,7 +128,7 @@ void loop()
 		}
 	}
 	matrix.writeDisplay();
-	delay(100);
+	delay(TET_DELAY_CONST);
 	dbufAdvance();
 }
 
