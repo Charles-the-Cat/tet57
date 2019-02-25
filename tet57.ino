@@ -82,27 +82,18 @@ void dbufAdvance()
 	}
 }
 
-void assertGameOver()
+uint8_t assertGameOver()
 {
-	// if anything in the top two lines of buf is filled, game over!
-	for ( uint8_t i = 0; i < TET_WIDTH*2; i++ )
+	// if anything in the highest visible line of buf is filled, 
+	// between the initialized barriers, game over!
+	for ( uint8_t i = 0; i < 8 + TET_VWIDTH; i++ )
 	{
 		if ( buf[i] )
 		{
-			for ( uint8_t flasher = 0;; flasher++ )
-			{
-				matrix.clear();
-				memset
-				(
-					buf, 
-					( flasher % 2 ? OFF : ON ), 
-					TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) 
-				);
-				matrix.writeDisplay();
-				delay(TET_DELAY_CONST);
-			}
+			return true;
 		}
 	}
+	return false;
 }
 
 /* Implementation stuff follows */
@@ -123,7 +114,7 @@ void setup()
 void loop()
 {
 	matrix.clear();
-	for ( uint8_t i = 0; i < TET_WIDTH * TET_HEIGHT; i++ )
+	for ( uint8_t i = 8; i < 8+ TET_HEIGHT; i++ )
 	{
 		if ( buf[i] || dbuf[i] )
 		{
@@ -133,7 +124,10 @@ void loop()
 	matrix.writeDisplay();
 	delay(TET_DELAY_CONST);
 	dbufAdvance();
-	assertGameOver();
+	if ( assertGameOver() )
+	{
+		memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
+	}
 }
 
 
