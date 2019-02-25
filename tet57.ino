@@ -86,7 +86,7 @@ uint8_t assertGameOver()
 {
 	// if anything in the highest visible line of buf is filled, 
 	// between the initialized barriers, game over!
-	for ( uint8_t i = 0; i < 8 + TET_VWIDTH; i++ )
+	for ( uint8_t i = 8; i < 8 + TET_VWIDTH; i++ )
 	{
 		if ( buf[i] )
 		{
@@ -114,7 +114,7 @@ void setup()
 void loop()
 {
 	matrix.clear();
-	for ( uint8_t i = 8; i < 8+ TET_HEIGHT; i++ )
+	for ( uint8_t i = 0; i < TET_WIDTH * TET_HEIGHT; i++ )
 	{
 		if ( buf[i] || dbuf[i] )
 		{
