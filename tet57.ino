@@ -1,26 +1,3 @@
-/*
-   ()()()()()()()
-   ()[][][][][]()
-   ()[][][][][]()
-   ()[][][][][]()
-   ()[][][][][]()
-   ()[][][][][]()
-   ()[][][][][]()
-   ()[][][][][]()
-   ()()()()()()()
-
-   [][][]
-
-     []
-   [][]
-
-     []
-   [][][]
-
-   [][]
-   [][]
-*/
-
 #define OFF 0x00
 #define ON 0xFF
 
@@ -105,6 +82,15 @@ void dbufAdvance()
 	}
 }
 
+void assertGameOver()
+{
+	// if anything in the top two lines of buf is filled, game over!
+	for ( uint8_t i = 0; i < TET_WIDTH*2; i++ )
+	{
+		if ( buf[i] ) goto GameOver;
+	}
+}
+
 /* Implementation stuff follows */
 
 #include <Wire.h>
@@ -133,6 +119,20 @@ void loop()
 	matrix.writeDisplay();
 	delay(TET_DELAY_CONST);
 	dbufAdvance();
+	assertGameOver();
+}
+GameOver:
+for ( uint8_t flasher = 0;; flasher++ )
+{
+	matrix.clear();
+	memset
+	(
+		buf, 
+		( flasher % 2 ? OFF : ON ), 
+		TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) 
+	);
+	matrix.writeDisplay();
+	delay(TET_DELAY_CONST);
 }
 
 /* AVR/timer code that will eventually replace the above setup() and loop() */
