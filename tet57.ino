@@ -101,58 +101,25 @@ uint8_t assertGameOver()
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
+#include <avr/interrupt.h>
+
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
-/* Arduino-style setup() and loop() being used for now */
-#if 1
-void setup()
-{
-	matrix.begin(0x70);
-	randomSeed(analogRead(0));
-	newShape();
-}
-void loop()
-{
-	matrix.clear();
-	for ( uint8_t i = 0; i < TET_WIDTH * TET_HEIGHT; i++ )
-	{
-		if ( buf[i] || dbuf[i] )
-		{
-			matrix.drawPixel( buf2x(i), buf2y(i), LED_YELLOW );
-		}
-	}
-	matrix.writeDisplay();
-	delay(TET_DELAY_CONST);
-	dbufAdvance();
-	if ( assertGameOver() )
-	{
-		memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
-	}
-}
-
-
-/* AVR/timer code that will eventually replace the above setup() and loop() */
-#endif
-#if 1-1
-#include <avr/interrupt.h>
-/*
-   Okay, so we want a delay of ~1/2 second. 
-   That would mean setting the prescale to Clk/1024
-   and counting about 32 overflows.
-*/
-
-/* increments with the number of interrupts.
+/* increments with each overflow interrupt.
    at 32, the next game tick begins and its value is reset to 0. */
-uint8_t ovfcnt = 0; 
+volatile uint8_t ovfcnt = 0; 
 void interruptSetup()
 {
 	cli(); // stop interrupts
 
 	TCCR2A = 0; // clear timer control register A. We want this to remain zero.
+	
 	/* clear and set timer control register B to use prescale mode Clk/1024 */
 	TCCR2B = ( 1 << CS20 ) | ( 1 << CS21 ) | ( 1 << CS22 );
 
 	TIMSK2 = ( 1 << TOIE2 ); // clear and enable timer overflow interrupt
+
+	TIFR2 = 0; // clear timer overflow flag
 
 	TCNT2 = 0; // clear timer register so it can begin counting from zero
 
@@ -194,7 +161,6 @@ void loop()
 	ovfcnt = 0;
 }
 
-#endif
 
 
 
