@@ -2,7 +2,7 @@
 #define ON 0xFF
 
 // constant frame delay, in milliseconds
-#define TET_DELAY_CONST 200
+#define TET_DELAY_CONST 500
 
 // buffer width and height
 #define TET_WIDTH 7
@@ -135,26 +135,31 @@ void loop()
 #endif
 #if 1-1
 #include <avr/interrupt.h>
+/*
+   Okay, so we want a delay of ~1/2 second. 
+   That would mean setting the prescale to Clk/1024
+   and counting about 32 overflows.
+*/
 
+/* increments with the number of interrupts.
+   at 32, the next game tick begins and its value is reset to 0. */
+uint8_t ovfcnt = 0; 
 void interruptSetup()
 {
 	cli(); // stop interrupts
 
-	TCCR1A = 0; // zero TCCR1A register
-	TCCR2A = 0; // zero TCCR2B register
-	TCNT1 = 0;  // initialize counter to 0
-	
-	OCR1A = 64000; // set compare match register for 250 Hz increments
-	// 64000 = 16000000 / (1 * 250 - 1)
+	TCCR2A = 0; // clear timer control register A. We want this to remain zero.
+	/* clear and set timer control register B to use prescale mode Clk/1024 */
+	TCCR2B = ( 1 << CS20 ) | ( 1 << CS21 ) | ( 1 << CS22 );
 
-	TCCR1B |= ( 1 << WGM12 ); // turn on CTC
-	TCCR1B |= ( 0 << CS12 ) | ( 0 << CS11 ) | ( 1 << CS10 ); // set bits for x1 prescaler
-	TIMSK1 |= ( 1 << OCIE1A ); // enable timer compare interrupt
+	TIMSK2 = ( 1 << TOIE2 ); // clear and enable timer overflow interrupt
+
+	TCNT2 = 0; // clear timer register so it can begin counting from zero
 
 	sei(); // allow interrupts
 }
 
-void main()
+void setup()
 {
 	matrix.begin( 0x70 );
 	randomSeed( analogRead( 0 ) );
@@ -162,9 +167,13 @@ void main()
 	interruptSetup();
 }
 
-ISR ( TIMER1_COMPA_vect )
+ISR ( TIMER2_OVF_vect )
 {
-	dbufAdvance();
+	ovfcnt++;
+}
+
+void loop()
+{
 	matrix.clear();
 	for ( uint8_t i = 0; i < TET_WIDTH * TET_HEIGHT; i++ )
 	{
@@ -174,10 +183,18 @@ ISR ( TIMER1_COMPA_vect )
 		}
 	}
 	matrix.writeDisplay();
+	dbufAdvance();
+	if ( assertGameOver() )
+	{
+		memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
+	}
+
+	// wait until ovfcnt is 32, then reset it and begin next tick
+	while ( ovfcnt < 32 ) {}
+	ovfcnt = 0;
 }
+
 #endif
-
-
 
 
 
