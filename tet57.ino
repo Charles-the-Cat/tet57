@@ -101,6 +101,13 @@ uint8_t assertGameOver()
 	return false;
 }
 
+void performGameOver()
+{
+	memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
+	while ( !digitalRead( TET_PIN_ROT ) ) {} // wait until button press
+	asm volatile ( " jmp 0" ); // basically, perform a software reset
+}
+
 void moveLeft()
 {
 
@@ -168,18 +175,15 @@ void interruptSetup()
 void setup()
 {
 	matrix.begin( 0x70 );
-	pinMode( TET_PIN_LEFT , OUTPUT );
-	pinMode( TET_PIN_RIGHT, OUTPUT );
-	pinMode( TET_PIN_ROT  , OUTPUT );
+	pinMode( TET_PIN_LEFT , INPUT );
+	pinMode( TET_PIN_RIGHT, INPUT );
+	pinMode( TET_PIN_ROT  , INPUT );
 	randomSeed( analogRead( 0 ) );
 	newShape();
 	interruptSetup();
 }
 
-ISR ( TIMER2_OVF_vect )
-{
-	ovfcnt++;
-}
+ISR ( TIMER2_OVF_vect ) { ovfcnt++; }
 
 void loop()
 {
@@ -193,10 +197,7 @@ void loop()
 	}
 	matrix.writeDisplay();
 	dbufAdvance();
-	if ( assertGameOver() )
-	{
-		memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
-	}
+	if ( assertGameOver() ) performGameOver();
 
 	// wait for the remainder of the tick, then reset ovfcnt and begin next tick
 	while ( ovfcnt < TET_TIME_OVFS ) 
