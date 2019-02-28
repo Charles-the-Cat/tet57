@@ -1,8 +1,13 @@
 #define OFF 0x00
 #define ON 0xFF
 
-// constant frame delay, in milliseconds
-#define TET_DELAY_CONST 500
+#define TET_PIN_LEFT  2
+#define TET_PIN_RIGHT 4
+#define TET_PIN_ROT   3
+
+// number of overflows to pass before moving on to next tick
+// 32 will give you about a half second per tick
+#define TET_TIME_OVFS 32
 
 // buffer width and height
 #define TET_WIDTH 7
@@ -96,6 +101,40 @@ uint8_t assertGameOver()
 	return false;
 }
 
+void moveLeft()
+{
+
+	for ( int8_t i = TET_WIDTH*(TET_HEIGHT-1)-1; i >= 0; i-- )
+	{
+		if ( dbuf[i] )
+		{
+			if ( !buf[i-1] ) // the space to the left is clear
+			{
+				dbuf[i] = OFF;
+				dbuf[i-1] = ON;
+			}
+		}
+	}
+}
+
+void moveRight()
+{
+
+	for ( int8_t i = TET_WIDTH*(TET_HEIGHT-1)-1; i >= 0; i-- )
+	{
+		if ( dbuf[i] )
+		{
+			if ( !buf[i+1] ) // the space to the right is clear
+			{
+				dbuf[i] = OFF;
+				dbuf[i+1] = ON;
+			}
+		}
+	}
+}
+
+
+
 /* Implementation stuff follows */
 
 #include <Wire.h>
@@ -129,6 +168,9 @@ void interruptSetup()
 void setup()
 {
 	matrix.begin( 0x70 );
+	pinMode( TET_PIN_LEFT , OUTPUT );
+	pinMode( TET_PIN_RIGHT, OUTPUT );
+	pinMode( TET_PIN_ROT  , OUTPUT );
 	randomSeed( analogRead( 0 ) );
 	newShape();
 	interruptSetup();
@@ -156,8 +198,18 @@ void loop()
 		memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
 	}
 
-	// wait until ovfcnt is 32, then reset it and begin next tick
-	while ( ovfcnt < 32 ) {}
+	// wait for the remainder of the tick, then reset ovfcnt and begin next tick
+	while ( ovfcnt < TET_TIME_OVFS ) 
+	{
+		if ( digitalRead( TET_PIN_LEFT ) )
+		{
+			moveLeft();
+		}
+		if ( digitalRead( TET_PIN_RIGHT ) )
+		{
+			moveRight();
+		}
+	}
 	ovfcnt = 0;
 }
 
