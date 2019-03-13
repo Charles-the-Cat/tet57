@@ -107,7 +107,9 @@ uint8_t assertGameOver()
 
 void performGameOver()
 {
-	assertPinLights(); // avoid glowing buttons upon loss
+	digitalWrite( TET_PIN_LEFT_LIT,  LOW );
+	digitalWrite( TET_PIN_RIGHT_LIT, LOW );
+	digitalWrite( TET_PIN_ROT_LIT,   LOW );
 	memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
 	while ( !digitalRead( TET_PIN_ROT ) ) {} // wait until button press
 	asm volatile ( "jmp 0" ); // basically, perform a software reset
@@ -141,17 +143,6 @@ void moveRight()
 			}
 		}
 	}
-}
-
-void assertPinLights()
-{
-	// TODO: digitalRead(), etc each iteration may be slow, use registers?
-	if ( digitalRead( TET_PIN_LEFT  ) ) digitalWrite( TET_PIN_LEFT_LIT,  HIGH );
-	else digitalWrite( TET_PIN_LEFT_LIT,  LOW );
-	if ( digitalRead( TET_PIN_RIGHT ) ) digitalWrite( TET_PIN_RIGHT_LIT, HIGH );
-	else digitalWrite( TET_PIN_RIGHT_LIT, LOW );
-	if ( digitalRead( TET_PIN_ROT   ) ) digitalWrite( TET_PIN_ROT_LIT,   HIGH );
-	else digitalWrite( TET_PIN_ROT_LIT,   LOW );
 }
 
 /* Implementation stuff follows */
@@ -220,7 +211,13 @@ void loop()
 	// wait for the remainder of the tick, then reset ovfcnt and begin next tick
 	while ( ovfcnt < TET_TIME_OVFS ) 
 	{
-		assertPinLights();
+		// TODO: digitalRead(), etc each iteration may be slow, use registers?
+		if ( digitalRead( TET_PIN_LEFT  ) ) digitalWrite( TET_PIN_LEFT_LIT,  HIGH );
+		else digitalWrite( TET_PIN_LEFT_LIT,  LOW );
+		if ( digitalRead( TET_PIN_RIGHT ) ) digitalWrite( TET_PIN_RIGHT_LIT, HIGH );
+		else digitalWrite( TET_PIN_RIGHT_LIT, LOW );
+		if ( digitalRead( TET_PIN_ROT   ) ) digitalWrite( TET_PIN_ROT_LIT,   HIGH );
+		else digitalWrite( TET_PIN_ROT_LIT,   LOW );
 	}
 	ovfcnt = 0;
 }
