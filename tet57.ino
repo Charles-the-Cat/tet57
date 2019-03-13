@@ -5,6 +5,10 @@
 #define TET_PIN_RIGHT 4
 #define TET_PIN_ROT   3
 
+#define TET_PIN_LEFT_LIT  5
+#define TET_PIN_RIGHT_LIT 7
+#define TET_PIN_ROT_LIT   6
+
 // number of overflows to pass before moving on to next tick
 // 32 will give you about a half second per tick
 #define TET_TIME_OVFS 32
@@ -105,7 +109,7 @@ void performGameOver()
 {
 	memset( dbuf, ON, TET_WIDTH*TET_HEIGHT*sizeof(uint8_t) );
 	while ( !digitalRead( TET_PIN_ROT ) ) {} // wait until button press
-	asm volatile ( " jmp 0" ); // basically, perform a software reset
+	asm volatile ( "jmp 0" ); // basically, perform a software reset
 }
 
 void moveLeft()
@@ -178,6 +182,9 @@ void setup()
 	pinMode( TET_PIN_LEFT , INPUT );
 	pinMode( TET_PIN_RIGHT, INPUT );
 	pinMode( TET_PIN_ROT  , INPUT );
+	pinMode( TET_PIN_LEFT_LIT , OUTPUT );
+	pinMode( TET_PIN_RIGHT_LIT, OUTPUT );
+	pinMode( TET_PIN_ROT_LIT  , OUTPUT );
 	randomSeed( analogRead( 0 ) );
 	newShape();
 	interruptSetup();
@@ -199,17 +206,19 @@ void loop()
 	dbufAdvance();
 	if ( assertGameOver() ) performGameOver();
 
+	uint8_t leftstate  = digitalRead( TET_PIN_LEFT  );
+	uint8_t rightstate = digitalRead( TET_PIN_RIGHT );
+	uint8_t rotstate   = digitalRead( TET_PIN_ROT   );
 	// wait for the remainder of the tick, then reset ovfcnt and begin next tick
 	while ( ovfcnt < TET_TIME_OVFS ) 
 	{
-		if ( digitalRead( TET_PIN_LEFT ) )
-		{
-			moveLeft();
-		}
-		if ( digitalRead( TET_PIN_RIGHT ) )
-		{
-			moveRight();
-		}
+		// TODO: digitalRead(), etc each iteration may be slow, use registers?
+		if ( digitalRead( TET_PIN_LEFT  ) ) digitalWrite( TET_PIN_LEFT_LIT,  HIGH );
+		else digitalWrite( TET_PIN_LEFT_LIT,  LOW );
+		if ( digitalRead( TET_PIN_RIGHT ) ) digitalWrite( TET_PIN_RIGHT_LIT, HIGH );
+		else digitalWrite( TET_PIN_RIGHT_LIT, LOW );
+		if ( digitalRead( TET_PIN_ROT   ) ) digitalWrite( TET_PIN_ROT_LIT,   HIGH );
+		else digitalWrite( TET_PIN_ROT_LIT,   LOW );
 	}
 	ovfcnt = 0;
 }
