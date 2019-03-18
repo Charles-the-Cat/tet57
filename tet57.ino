@@ -204,20 +204,46 @@ void loop()
 	matrix.writeDisplay();
 	dbufAdvance();
 	if ( assertGameOver() ) performGameOver();
+	
+	long debounce = 200; // TODO: make this a define
+	uint8_t leftcur;  uint8_t leftprev  = LOW; long lefttime  = 0;
+	uint8_t rightcur; uint8_t rightprev = LOW; long righttime = 0;
+	uint8_t rotcur;   uint8_t rotprev   = LOW; long rottime   = 0;
 
-	uint8_t leftstate  = digitalRead( TET_PIN_LEFT  );
-	uint8_t rightstate = digitalRead( TET_PIN_RIGHT );
-	uint8_t rotstate   = digitalRead( TET_PIN_ROT   );
 	// wait for the remainder of the tick, then reset ovfcnt and begin next tick
 	while ( ovfcnt < TET_TIME_OVFS ) 
 	{
+		leftcur =  digitalRead( TET_PIN_LEFT  );
+		rightcur = digitalRead( TET_PIN_RIGHT );
+		rotcur =   digitalRead( TET_PIN_ROT   );
+
 		// TODO: digitalRead(), etc each iteration may be slow, use registers?
-		if ( digitalRead( TET_PIN_LEFT  ) ) digitalWrite( TET_PIN_LEFT_LIT,  HIGH );
+		if ( leftcur  ) digitalWrite( TET_PIN_LEFT_LIT,  HIGH );
 		else digitalWrite( TET_PIN_LEFT_LIT,  LOW );
-		if ( digitalRead( TET_PIN_RIGHT ) ) digitalWrite( TET_PIN_RIGHT_LIT, HIGH );
+		if ( rightcur ) digitalWrite( TET_PIN_RIGHT_LIT, HIGH );
 		else digitalWrite( TET_PIN_RIGHT_LIT, LOW );
-		if ( digitalRead( TET_PIN_ROT   ) ) digitalWrite( TET_PIN_ROT_LIT,   HIGH );
+		if ( rotcur   ) digitalWrite( TET_PIN_ROT_LIT,   HIGH );
 		else digitalWrite( TET_PIN_ROT_LIT,   LOW );
+
+		if ( leftcur && !leftprev && millis() - lefttime > debounce  )
+		{
+			moveLeft();
+			lefttime = millis();
+		}
+		leftprev = leftcur;
+
+		if ( rightcur && !rightprev && millis() - righttime > debounce  )
+		{
+			moveRight();
+			righttime = millis();
+		}
+		rightprev = rightcur;
+		
+		if ( rotcur && !rotprev && millis() - rottime > debounce  )
+		{
+			rottime = millis();
+		}
+		rotprev = rotcur;
 	}
 	ovfcnt = 0;
 }
